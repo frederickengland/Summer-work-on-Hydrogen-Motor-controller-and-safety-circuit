@@ -1,8 +1,11 @@
-const int pedal = 1;
-const int steering_wheel = 2;
+const int motor_left1 = 3;
+const int motor_left2 = 4;
 
-const int motor_left = 3;
-const int motor_right = 4;
+const int motor_right1 = 5;
+const int motor_right2 = 6;
+
+#define VRX_PIN A1
+#define VRY_PIN A0
 
 int throttle = 0;
 int steering = 0;
@@ -14,7 +17,7 @@ int clamp_value(int value, int minimum, int maximum)
 }
 
 
-void calculate_turning(int throttle, int steering,int &motor_left_pwr,int &motor_right_pwr)
+void calculate_turning(int throttle,int steering,int &motor_left_pwr,int &motor_right_pwr)
 {
     motor_left_pwr = throttle - steering;
     motor_right_pwr = throttle + steering;
@@ -24,41 +27,56 @@ void calculate_turning(int throttle, int steering,int &motor_left_pwr,int &motor
 }
 
 
+void set_motor(int pin1, int pin2, int speed)
+{
+    int pwm = map(abs(speed), 0, 100, 0, 255);
+
+    if (speed >= 0)
+    {
+        analogWrite(pin1, pwm);
+        analogWrite(pin2, 0);
+    }
+    else
+    {
+        analogWrite(pin1, 0);
+        analogWrite(pin2, pwm);
+    }
+}
+
+
 void setup()
 {
     Serial.begin(9600);
 
-    pinMode(motor_left, OUTPUT);
-    pinMode(motor_right, OUTPUT);
+    pinMode(motor_left1, OUTPUT);
+    pinMode(motor_left2, OUTPUT);
+
+    pinMode(motor_right1, OUTPUT);
+    pinMode(motor_right2, OUTPUT);
 }
 
 
 void loop()
 {
-    if (steering > 540 || steering < -540)
-    {
-        Serial.println("Steering value not valid");
-    }
-    else
-    {
-        float steering_scaled = steering / 5.4;
+    int xValue = analogRead(VRX_PIN);
+    int yValue = analogRead(VRY_PIN);
 
-        int left;
-        int right;
+    steering = map(xValue, 0, 1023, -100, 100);
+    throttle = map(yValue, 0, 1023, -100, 100);
 
-        calculate_turning(throttle,steering_scaled,left,right);
+    int left;
+    int right;
 
-        Serial.print("Left Motor: ");
-        Serial.println(left);
+    calculate_turning(throttle,steering,left,right);
 
-        Serial.print("Right Motor: ");
-        Serial.println(right);
+    Serial.print("Left Motor: ");
+    Serial.println(left);
 
-        // Convert -100 to 100 into PWM range
-        int left_pwm = map(left, -100, 100, 0, 255);
-        int right_pwm = map(right, -100, 100, 0, 255);
+    Serial.print("Right Motor: ");
+    Serial.println(right);
 
-        analogWrite(motor_left, left_pwm);
-        analogWrite(motor_right, right_pwm);
-    }
+    set_motor(motor_left1, motor_left2, left);
+    set_motor(motor_right1, motor_right2, right);
+
+    delay(50);
 }
