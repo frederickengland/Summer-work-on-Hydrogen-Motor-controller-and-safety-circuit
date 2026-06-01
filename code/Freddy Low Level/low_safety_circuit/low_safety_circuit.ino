@@ -1,70 +1,75 @@
-const int motor_left = 1;
-const int motor_right = 2;
+const int motor_left1 = 3;
+const int motor_left2 = 4;
 
-bool overheating = false;
-bool overcurrent = false;
-bool sensor_fault = false;
+const int motor_right1 = 5;
+const int motor_right2 = 6;
 
-void power_on(int motor_left, int motor_right)
+const int MAX_SAFE_VOLTAGE = 100;
+
+int voltage = 0;
+
+void power_on()
 {
-int throttle = 100;
-int pwm = throttle * 2.55;
-    analogWrite(motor_left, pwm);
-    analogWrite(motor_right, pwm);
+    analogWrite(motor_left1, 255);
+    analogWrite(motor_left2, 0);
+
+    analogWrite(motor_right1, 0);
+    analogWrite(motor_right2, 255);
 }
 
-
-void power_off(int motor_left, int motor_right)
+void power_off()
 {
-int throttle = 0;
-int pwm = throttle * 2.55;
-    analogWrite(motor_left, pwm);
-    analogWrite(motor_right, pwm);
-}
+    analogWrite(motor_left1, 0);
+    analogWrite(motor_left2, 0);
 
+    analogWrite(motor_right1, 0);
+    analogWrite(motor_right2, 0);
+}
 
 bool dangerous_situation()
 {
-    if (overcurrent)
-    {
-        return true;
-    }
-
-    if (overheating)
-    {
-        return true;
-    }
-
-    if (sensor_fault)
-    {
-        return true;
-    }
-
-    return false;
+    return voltage > MAX_SAFE_VOLTAGE;
 }
-
 
 void setup()
 {
     Serial.begin(9600);
 
-    pinMode(motor_left, OUTPUT);
-    pinMode(motor_right, OUTPUT);
-}
+    pinMode(motor_left1, OUTPUT);
+    pinMode(motor_left2, OUTPUT);
 
+    pinMode(motor_right1, OUTPUT);
+    pinMode(motor_right2, OUTPUT);
+
+    randomSeed(analogRead(A0));
+}
 
 void loop()
 {
+    int spike = random(0, 20);
+
+    voltage += spike;
+
+    Serial.print("Voltage: ");
+    Serial.println(voltage);
+
     if (dangerous_situation())
     {
-        power_off(motor_left, motor_right);
+        power_off();
 
-        Serial.println("Power off. Fault detected.");
+        Serial.println("Power off. Overvoltage fault detected.");
+
+        while (true)
+        {
+            // Stay shut down
+        }
     }
     else
     {
-        power_on(motor_left, motor_right);
+        power_on();
 
-        Serial.println("System safe. Continuing driving.");
+        Serial.println("System safe.");
     }
+
+    delay(500);
 }
