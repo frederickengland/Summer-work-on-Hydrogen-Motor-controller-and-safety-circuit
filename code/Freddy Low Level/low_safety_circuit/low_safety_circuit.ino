@@ -62,6 +62,7 @@ void loop()
         while (true)
         {
             // Stay shut down
+            //if(dangerous_situation_recovered){break; normal();}
         }
     }
     else
