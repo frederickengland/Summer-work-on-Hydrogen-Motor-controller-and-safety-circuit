@@ -9,29 +9,31 @@ int motorE = 11;
 
 Encoder myEncoder(encoderA, encoderB);
 
-float reference = 1000;
-float measure = 0;
+float pos = 0;
+float setpoint = 0;
+
+float output = 0;
+
+float ticksPerDegree = 44.0 * 193.0 / 360.0 / 3.0;
 float error = 0;
 
-void fast()
+void forward()
 {
     digitalWrite(motorA, HIGH);
     digitalWrite(motorB, LOW);
     analogWrite(motorE, 255);
 }
 
-void slow()
+void reverse()
 {
-    digitalWrite(motorA, HIGH);
-    digitalWrite(motorB, LOW);
-    analogWrite(motorE, 55);
+    digitalWrite(motorA, LOW);
+    digitalWrite(motorB, HIGH);
+    analogWrite(motorE, 255);
 }
 
-void medium()
+void stopMotor()
 {
-    digitalWrite(motorA, HIGH);
-    digitalWrite(motorB, LOW);
-    analogWrite(motorE, 125);
+    analogWrite(motorE, 0);
 }
 
 void setup()
@@ -41,29 +43,59 @@ void setup()
     pinMode(motorE, OUTPUT);
 
     Serial.begin(9600);
+
+    Serial.println("Enter a target angle in degrees:");
 }
 
 void loop()
 {
-    measure = myEncoder.read();
+    // Convert encoder ticks to degrees
+    pos = myEncoder.read() / ticksPerDegree;
 
-    error = reference - measure;
-
-    if (error == 0)
+    // Read desired position from serial monitor
+    if (Serial.available() > 0)
     {
-        medium();
+        setpoint = Serial.parseFloat();
+
+        Serial.print("New Setpoint: ");
+        Serial.println(setpoint);
     }
 
-    if (error > 0)
+    // Calculate control error
+    error = setpoint - pos;
+
+    // Bang-Bang Controller
+    if (abs(error) < 2.0)
     {
-        fast();
+        stopMotor();
+        output = 0;
+    }
+    else if (error > 0)
+    {
+        forward();
+        output = 255;
+    }
+    else
+    {
+        reverse();
+        output = -255;
     }
 
-    if (error < 0)
-    {
-        slow();
-    }
+    // Run controller at 10 Hz
+    delay(100);
 
-    Serial.print("Position: ");
-    Serial.println(measure);
+    // Debug information
+    Serial.print("Setpoint: ");
+    Serial.print(setpoint);
+
+    Serial.print(", Position: ");
+    Serial.print(pos);
+
+    Serial.print(", Error: ");
+    Serial.print(error);
+
+    Serial.print(", OutputPower: ");
+    Serial.print(output);
+
+    Serial.println();
 }
