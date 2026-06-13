@@ -16,6 +16,10 @@ float output = 0;
 
 float ticksPerDegree = 44.0 * 193.0 / 360.0 / 3.0;
 float error = 0;
+int current_power = 0;
+int power = current_power;
+// a function that checks if the number has spiked up randomly checks if number has risen and if so does it remain for more than one instance.
+
 
 void forward()
 {
