@@ -7,19 +7,18 @@ int motorA = 6;
 int motorB = 5;
 int motorE = 11;
 
+// Potentiometer
+int potPin = A3;
+int potVal = 0;
+
 Encoder myEncoder(encoderA, encoderB);
 
 float pos = 0;
 float setpoint = 0;
-
 float output = 0;
 
 float ticksPerDegree = 44.0 * 193.0 / 360.0 / 3.0;
 float error = 0;
-int current_power = 0;
-int power = current_power;
-// a function that checks if the number has spiked up randomly checks if number has risen and if so does it remain for more than one instance.
-
 
 void forward()
 {
@@ -48,27 +47,24 @@ void setup()
 
     Serial.begin(9600);
 
-    Serial.println("Enter a target angle in degrees:");
+    Serial.println("Bang-Bang Controller Ready");
 }
 
 void loop()
 {
-    // Convert encoder ticks to degrees
+    // Read current position
     pos = myEncoder.read() / ticksPerDegree;
 
-    // Read desired position from serial monitor
-    if (Serial.available() > 0)
-    {
-        setpoint = Serial.parseFloat();
+    // Read potentiometer
+    potVal = analogRead(potPin);
 
-        Serial.print("New Setpoint: ");
-        Serial.println(setpoint);
-    }
+    // Convert 0-1023 into desired angle (0-180 degrees)
+    setpoint = map(potVal, 0, 1023, 0, 180);
 
-    // Calculate control error
+    // Calculate error
     error = setpoint - pos;
 
-    // Bang-Bang Controller
+    // Bang-Bang controller
     if (abs(error) < 2.0)
     {
         stopMotor();
@@ -85,9 +81,6 @@ void loop()
         output = -255;
     }
 
-    // Run controller at 10 Hz
-    delay(100);
-
     // Debug information
     Serial.print("Setpoint: ");
     Serial.print(setpoint);
@@ -99,7 +92,7 @@ void loop()
     Serial.print(error);
 
     Serial.print(", OutputPower: ");
-    Serial.print(output);
+    Serial.println(output);
 
-    Serial.println();
+    delay(100);
 }
