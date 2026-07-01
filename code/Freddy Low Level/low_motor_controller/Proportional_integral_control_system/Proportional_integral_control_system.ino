@@ -13,6 +13,10 @@ int potVal = 0;
 
 Encoder myEncoder(encoderA, encoderB);
 
+unsigned long lastTime = 0;
+float deltaTime = 0.0;
+float integral = 0.0;
+
 float pos = 0;
 float setpoint = 0;
 float output = 0;
@@ -22,6 +26,9 @@ float error = 0;
 
 // Proportional gain
 float Kp = 2.0;
+
+// Integral gain
+float Ki = 0.0;
 
 void forward(int pwm)
 {
@@ -50,23 +57,29 @@ void setup()
 
     Serial.begin(9600);
 
-    Serial.println("Proportional Controller Ready");
+    lastTime = millis();
+
+    Serial.println("PI Controller Ready");
 }
 
 void loop()
 {
+    unsigned long currentTime = millis();
+    deltaTime = (currentTime - lastTime) / 1000.0;
+    lastTime = currentTime;
+
     // Read current position
     pos = myEncoder.read() / ticksPerDegree;
-
     // Read potentiometer
     potVal = analogRead(potPin);
-
     // Convert to desired position
     setpoint = map(potVal, 0, 1023, 0, 180);
     // Calculate error
     error = setpoint - pos;
-    // Proportional controller
-    output = Kp * error;
+    // Integral term
+    integral += error * deltaTime;
+    // PI controller
+    output = (Kp * error) + (Ki * integral);
 
     // Limit output to PWM range
     output = constrain(output, -255, 255);
