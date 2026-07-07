@@ -5,7 +5,11 @@ const int encoderB = 5;
 
 const int motor_left1 = 3;
 const int motor_left2 = 4; // change this back to the encoder motor
+const int encoderC = 6;
+const int encoderD = 8;
 
+const int motor_left3 = 7;
+const int motor_left4 = 9;
 // Potentiometer
 int potPin = A3;
 int potVal = 0;
@@ -31,11 +35,6 @@ float Kp = 2.0;
 float Ki = 0.0;
 float Kd = 0.1;
 
-int clamp_value(int value, int minimum, int maximum)
-{
-    return max(minimum, min(value, maximum));
-}
-
 void set_motor(int pin1, int pin2, int speed)
 {
     int pwm = map(abs(speed), 0, 255, 0, 255);
@@ -56,7 +55,9 @@ void setup()
 {
     pinMode(motor_left1, OUTPUT);
     pinMode(motor_left2, OUTPUT);
-
+    pinMode(motor_left3, OUTPUT);
+    pinMode(motor_left4, OUTPUT);
+    pinMode(potPin, INPUT);
     Serial.begin(9600);
 
     lastTime = millis();
