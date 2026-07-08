@@ -5,11 +5,6 @@ const int encoderB = 5;
 
 const int motor_left1 = 3;
 const int motor_left2 = 4; // change this back to the encoder motor
-const int encoderC = 6;
-const int encoderD = 8;
-
-const int motor_left3 = 7;
-const int motor_left4 = 9;
 // Potentiometer
 int potPin = A3;
 int potVal = 0;
